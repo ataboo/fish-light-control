@@ -10,4 +10,53 @@ menu "ESP-Fish-Light"
         default "mypassword"
         help
             WiFi password.
+
+    config LIGHTSTRIP_GPIO
+        int "Lightstrip GPIO Pin"
+        default 17
+        range 0 36
+        help
+            GPIO number for the lightstrip.
+
+    config LED_COUNT
+        int "LED Count"
+        default 10
+        help
+            Number of LEDs in lightstrip.
+
+    config TIMEZONE
+        string "Timezone"
+        default "PST8PDT,M3.2.0/2,M11.1.0"
+        help
+            Timezone for light dimming.
+
+    config MIDDAY_COLOR
+        hex "Mid day color"
+        default 0x646464
+        help
+            Color value at full brightness.
+
+    config SUNRISE_START
+        int "Sunrise Start"
+        default 800
+        help
+            Start of sunrise transition {h}{M}
+
+    config SUNRISE_END
+        int "Sunrise End"
+        default 1000
+        help
+            End of sunrise transition {h}{M}
+
+    config SUNSET_START
+        int "Sunset Start"
+        default 1800
+        help
+            Start of sunset transition {h}{M}
+
+    config SUNSET_END
+        int "Sunset End"
+        default 2000
+        help
+            End of sunset transition {h}{M}
 endmenu

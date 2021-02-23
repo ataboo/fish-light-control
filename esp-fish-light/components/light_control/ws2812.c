@@ -13,11 +13,15 @@ static const char* TAG = "WS2812";
 #define WS2812_T1H_NS 900
 #define WS2812_T0L_NS 900
 #define WS2812_T1L_NS 350
+#define WS2812_TRES_NS 60000
 
 static uint32_t t0h_ticks = 0;
 static uint32_t t1h_ticks = 0;
 static uint32_t t0l_ticks = 0;
 static uint32_t t1l_ticks = 0;
+static uint32_t tres_ticks = 0;
+
+static rmt_item32_t reset_item;
 
 typedef struct {
     uint8_t g;
@@ -86,18 +90,28 @@ static esp_err_t ws2812_commit(led_strip_t* strip, uint32_t timeout_ms) {
         return ret;
     }
 
+    ret = rmt_write_items(ws2812->rmt_channel, &reset_item, 1, true);
+    if(ret != ESP_OK) {
+        return ret;
+    }
+
     return rmt_wait_tx_done(ws2812->rmt_channel, pdMS_TO_TICKS(timeout_ms));
 }
 
-static esp_err_t ws2812_clear(led_strip_t* strip, uint32_t timeout_ms) {
+static esp_err_t ws2812_set_color_all(led_strip_t* strip, uint32_t timeout_ms, color_rgb_t color) {
     ws2812_strip_t* ws2812 = __containerof(strip, ws2812_strip_t, parent);
     
-    color_rgb_t clear = {0, 0, 0};
     for(int i=0; i<ws2812->light_count; i++) {
-        ws2812_set_color(strip, i, clear);
+        ws2812_set_color(strip, i, color);
     }
 
     return ws2812_commit(strip, timeout_ms);
+}
+
+static esp_err_t ws2812_clear(led_strip_t* strip, uint32_t timeout_ms) {
+    color_rgb_t clear = {0, 0, 0};
+
+    return ws2812_set_color_all(strip, timeout_ms, clear);
 }
 
 static esp_err_t ws2812_free(led_strip_t* strip) {
@@ -120,6 +134,13 @@ led_strip_t* ws2812_init(const led_strip_config_t* config) {
     t1h_ticks = (uint32_t)(ticksPerNanosecond * WS2812_T1H_NS);
     t0l_ticks = (uint32_t)(ticksPerNanosecond * WS2812_T0L_NS);
     t1l_ticks = (uint32_t)(ticksPerNanosecond * WS2812_T1L_NS);
+    tres_ticks = (uint32_t)(ticksPerNanosecond * WS2812_TRES_NS);
+    reset_item = (rmt_item32_t){
+        .duration0 = tres_ticks,
+        .duration1 = 0,
+        .level0 = 0,
+        .level1 = 0,
+    };
 
     ESP_LOGI(TAG, "Ticks ns T0H: %d, T1H: %d, T0L: %d, T1L: %d", t0h_ticks, t1h_ticks, t0l_ticks, t1l_ticks);
 
@@ -132,6 +153,7 @@ led_strip_t* ws2812_init(const led_strip_config_t* config) {
     ws2812->parent.commit = ws2812_commit;
     ws2812->parent.free = ws2812_free;
     ws2812->parent.set_color = ws2812_set_color;
+    ws2812->parent.set_color_all = ws2812_set_color_all;
 
     return &ws2812->parent;
 }

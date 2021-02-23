@@ -98,22 +98,35 @@ static void init_wifi() {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = CONFIG_WIFI_SSID,
-            .password = CONFIG_WIFI_PASSWORD,
-            /* Setting a password implies station will connect to all security modes including WEP/WPA.
-             * However these modes are deprecated and not advisable to be used. Incase your Access point
-             * doesn't support WPA2, these mode can be enabled by commenting below line */
-	        .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+    wifi_config_t wifi_config = {0};
 
-            .pmf_cfg = {
-                .capable = true,
-                .required = false
-            },
-            .listen_interval = 5,
-        },
+    wifi_config.sta = (wifi_sta_config_t){
+        .ssid = CONFIG_WIFI_SSID,
+        .password = CONFIG_WIFI_PASSWORD,
+        .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+
+        .pmf_cfg = {
+            .capable = true,
+            .required = false
+        }
     };
+
+    // wifi_config_t wifi_config = {
+    //     .sta = {
+    //         .ssid = CONFIG_WIFI_SSID,
+    //         .password = CONFIG_WIFI_PASSWORD,
+    //         /* Setting a password implies station will connect to all security modes including WEP/WPA.
+    //          * However these modes are deprecated and not advisable to be used. Incase your Access point
+    //          * doesn't support WPA2, these mode can be enabled by commenting below line */
+	//         .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+
+    //         .pmf_cfg = {
+    //             .capable = true,
+    //             .required = false
+    //         },
+    //         .listen_interval = 5,
+    //     },
+    // };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
 }
@@ -160,7 +173,7 @@ static void update_time_task(void *param) {
         esp_wifi_connect();
     }
 
-        sntp_init();
+    sntp_init();
 
     retry_count = 0;
     while(sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET || sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
@@ -174,13 +187,17 @@ static void update_time_task(void *param) {
         }
     }
 
-    ESP_ERROR_CHECK(esp_wifi_stop());
+    sntp_stop();
 
+    esp_wifi_disconnect();
+    ESP_ERROR_CHECK(esp_wifi_stop());
     xEventGroupWaitBits(s_wifi_event_group, WIFI_STOPPED_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
     ESP_LOGI(TAG, "wifi disconnect complete");
     // ESP_ERROR_CHECK(esp_wifi_deinit());
     // esp_netif_destroy(netif_handle);
     // esp_wifi_restore();
+
+
 
     char strftime_buf[64];
     struct tm timeinfo = {0};

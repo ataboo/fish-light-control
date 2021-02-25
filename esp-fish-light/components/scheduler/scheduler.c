@@ -1,4 +1,4 @@
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+// #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "scheduler.h"
 #include "light_control.h"
 #include "wifi_time.h"
@@ -51,25 +51,28 @@ static void update_light_for_time() {
 }
 
 static uint16_t mins_until_next_wakeup() {
-    int mins = timeinfo.tm_hour * 60 + timeinfo.tm_min;
+    return 1;
 
-    if(mins < sunrise_start_mins) {
-        return (sunrise_start_mins - mins);
-    }
+    //If the data line gets less noise, will use something like this again.
+    // int mins = timeinfo.tm_hour * 60 + timeinfo.tm_min;
 
-    if (mins < sunrise_end_mins) {
-        return 1;
-    }
+    // if(mins < sunrise_start_mins) {
+    //     return (sunrise_start_mins - mins);
+    // }
 
-    if (mins < sunset_start_mins) {
-        return sunset_start_mins - mins;
-    }
+    // if (mins < sunrise_end_mins) {
+    //     return 1;
+    // }
 
-    if (mins < sunset_end_mins) {
-        return 1;
-    }
+    // if (mins < sunset_start_mins) {
+    //     return sunset_start_mins - mins;
+    // }
 
-    return 24 * 60 - mins + sunrise_start_mins;
+    // if (mins < sunset_end_mins) {
+    //     return 1;
+    // }
+
+    // return 24 * 60 - mins + sunrise_start_mins;
 }
 
 static void update_internal_clock() {

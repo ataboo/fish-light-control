@@ -32,7 +32,7 @@ menu "ESP-Fish-Light"
 
     config MIDDAY_COLOR
         hex "Mid day color"
-        default 0x646464
+        default 0x946420
         help
             Color value at full brightness.
 

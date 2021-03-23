@@ -17,7 +17,6 @@
 static const char *TAG = "LIGHT_CONTROL";
 static led_strip_t* led_strip;
 static struct tm timeinfo;
-static color_rgb_t last_color = {-1, -1, -1};
 static color_rgb_t current_color;
 
 #define RMT_TX_CHANNEL RMT_CHANNEL_0
@@ -64,10 +63,5 @@ esp_err_t light_dim_level(float level) {
     current_color = color_for_level(level);
     ESP_LOGD(TAG, "Current color for level: %.3f, %d, %d, %d", level, current_color.r, current_color.g, current_color.b);
 
-    if(!COLORS_EQUAL(current_color, last_color)) {
-        ret = led_strip->set_color_all(led_strip, 200, current_color);
-        last_color = current_color;
-    }
-
-    return ret;
+    return led_strip->set_color_all(led_strip, 200, current_color);
 }

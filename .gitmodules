@@ -1,0 +1,3 @@
+[submodule "esp-fish-light/components/esp-ssd-1306"]
+	path = esp-fish-light/components/esp-ssd-1306
+	url = git@github.com:ataboo/esp-ssd-1306.git

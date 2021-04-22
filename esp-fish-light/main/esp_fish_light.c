@@ -8,12 +8,14 @@
 #include "scheduler.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "ssd-1306-i2c.h"
 
 static const char *TAG = "ESP_FISH_LIGHT";
 
 void app_main(void)
 {
     // esp_log_level_set("*", ESP_LOG_INFO);
+
 
     wifi_time_init();
     ESP_ERROR_CHECK(light_control_init());

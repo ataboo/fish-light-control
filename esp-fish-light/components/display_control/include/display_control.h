@@ -4,11 +4,12 @@
 #include "esp_err.h"
 
 typedef struct {
-    time_t time,
-    float light_level,
-    int16_t temps[4];
+    struct tm* time;
+    float light_level;
+    float* temps;
+    uint8_t temp_count;
 } display_values_t;
 
 esp_err_t display_control_init();
 
-esp_err_t display_control_update();
+esp_err_t display_control_update(display_values_t* values);

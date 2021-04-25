@@ -17,26 +17,41 @@ void app_main(void)
 {
     // esp_log_level_set("*", ESP_LOG_INFO);
 
-    float temp_vals[3] = {1.1, 2.2, -3.3};
-    struct tm now = {
-        .tm_hour = 12,
-        .tm_min = 34
-    };
+    time_t now;
+    
+    struct tm timeinfo;
 
-    display_values_t values = {
-        .light_level = 0.5,
-        .temp_count = 3,
-        .temps = temp_vals,
-        .time = &now 
-    };
 
+    wifi_time_init();
     ESP_ERROR_CHECK_WITHOUT_ABORT(display_control_init());
 
-    display_control_update(&values);
 
-    // wifi_time_init();
-    // ESP_ERROR_CHECK(light_control_init());
-    // vTaskDelay(50/portTICK_PERIOD_MS);
-    
-    // scheduler_start();
+    char temp_labels[3][TEMP_LABEL_MAX_STR_LEN] = { "Dathan", "Johnny", "Thanatos" };
+    float temps[3] = { 25.5f, 28.2f, 30.1f };
+    temp_warn_t temp_warns[3] = {TEMP_NOMINAL, TEMP_WARM, TEMP_HOT};
+
+    scheduler_start();
+
+    while(true) {
+        time(&now);
+        localtime_r(&now, &timeinfo);
+
+        display_values_t values = {
+            .light_level = 0.5,
+            .time = &timeinfo,
+            .temp_labels = (char*)temp_labels,
+            .temp_count = 3,
+            .temp_warns = (temp_warn_t*)temp_warns,
+            .temps = temps,
+        };
+
+        display_control_update(&values);
+
+        vTaskDelay(1000/portTICK_RATE_MS);
+
+        // ESP_ERROR_CHECK(light_control_init());
+        // vTaskDelay(50/portTICK_PERIOD_MS);
+
+
+    }
 }

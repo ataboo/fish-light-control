@@ -1,6 +1,7 @@
 // #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "scheduler.h"
 #include "light_control.h"
+#include "display_control.h"
 #include "wifi_time.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -51,6 +52,7 @@ static void update_light_for_time() {
 }
 
 static uint16_t mins_until_next_wakeup() {
+
     return 1;
 
     //If the data line gets less noise, will use something like this again.
@@ -97,6 +99,9 @@ static void scheduler_loop_task(void* arg) {
             update_internal_clock();
         }
         
+
+        //TODO if alarm, no sleep.
+
         sleep_time_mins = mins_until_next_wakeup();
         ESP_LOGI(TAG, "Sleeping for %d seconds", sleep_time_mins * 60);
         esp_sleep_enable_timer_wakeup((uint64_t)sleep_time_mins * 60e6);
@@ -134,7 +139,7 @@ static void scheduler_init() {
 esp_err_t scheduler_start() {
     scheduler_init();
 
-    xTaskCreate(scheduler_loop_task, "scheduler loop", 4096, NULL, 5, NULL);
+    // xTaskCreate(scheduler_loop_task, "scheduler loop", 4096, NULL, 5, NULL);
 
     return ESP_OK;
 }

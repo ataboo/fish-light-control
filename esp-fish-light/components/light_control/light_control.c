@@ -46,14 +46,26 @@ esp_err_t light_control_init() {
 }
 
 esp_err_t light_loading() {
+    if (!led_strip) {
+        return ESP_FAIL;
+    }
+
     return led_strip->set_color_all(led_strip, 200, (color_rgb_t){0, 0, 20});
 }
 
 esp_err_t light_error() {
+    if (!led_strip) {
+        return ESP_FAIL;
+    }
+
     return led_strip->set_color_all(led_strip, 200, (color_rgb_t){20, 0, 0});
 }
 
 esp_err_t light_dim_level(float level) {
+    if (!led_strip) {
+        return ESP_FAIL;
+    }
+    
     esp_err_t ret = ESP_OK;
     
     if(level > 1 || level < 0) {

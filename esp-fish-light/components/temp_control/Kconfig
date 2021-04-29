@@ -1,0 +1,41 @@
+menu "Temp Control"
+    config TEMP_COUNT
+        int "Temp Count"
+        default 1
+        range 0 4
+        help
+            Number of DS18B20 temp sensors.
+
+    config TEMP_0_NAME
+        string "Temp 0 Name"
+        default "Temp 0"
+
+    config TEMP_0_ID
+        string "Temp 0 OWB ID"
+        default ""
+
+    config TEMP_1_NAME
+        string "Temp 1 Name"
+        default "Temp 1"
+
+    config TEMP_1_ID
+        string "Temp 1 OWB ID"
+        default ""
+
+    config TEMP_2_NAME
+        string "Temp 2 Name"
+        default "Temp 2"
+
+    config TEMP_2_ID
+        string "Temp 2 OWB ID"
+        default ""
+
+    config TEMP_3_NAME
+        string "Temp 3 Name"
+        default "Temp 3"
+
+    config TEMP_3_ID
+        string "Temp 3 OWB ID"
+        default ""
+
+endmenu

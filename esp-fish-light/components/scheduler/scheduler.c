@@ -8,6 +8,7 @@
 #include "esp_log.h"
 #include "time.h"
 #include "esp_sleep.h"
+#include "temp_control.h"
 
 #define CLOCK_UPDATE_COOLDOWN_MINS (60) 
 
@@ -23,6 +24,8 @@ static int64_t last_update_micros;
 static time_t now = 0;
 static uint16_t sleep_time_mins;
 static struct tm timeinfo;
+static temp_data_t* temp_data;
+static display_values_t disp_values; 
 
 static int hm_to_mins(int hour_mins) {
     return (hour_mins / 100 * 60) + (hour_mins % 100);
@@ -48,7 +51,23 @@ static void update_light_for_time() {
     int mins = timeinfo.tm_hour * 60 + timeinfo.tm_min;
     float level = level_for_time(mins);
 
-    light_dim_level(level);
+    ESP_ERROR_CHECK_WITHOUT_ABORT(light_dim_level(level));
+}
+
+static void update_display(struct tm* time_info) {
+    esp_err_t ret = temp_control_update(temp_data);
+    if(ret != ESP_OK) {
+        ESP_LOGE(TAG, "failed to update temp values");
+    }
+
+    for(int i=0; i<CONFIG_TEMP_COUNT; i++) {
+        disp_values.temp_data[i].temp = temp_data[i].temp;
+        disp_values.temp_data[i].warning = temp_data[i].warn;
+    }
+    
+    disp_values.time = time_info;
+
+    display_control_update(&disp_values);
 }
 
 static uint16_t mins_until_next_wakeup() {
@@ -95,10 +114,11 @@ static void scheduler_loop_task(void* arg) {
         ESP_LOGI(TAG, "Updating for time: %.2d:%.2d", timeinfo.tm_hour, timeinfo.tm_min);
         update_light_for_time(now);
         
+        update_display(&timeinfo);
+        
         if (esp_timer_get_time() - last_update_micros > clock_update_cooldown_micros) {
             update_internal_clock();
         }
-        
 
         //TODO if alarm, no sleep.
 
@@ -118,17 +138,26 @@ static void scheduler_init() {
     sunrise_end_mins = hm_to_mins(CONFIG_SUNRISE_END);
     sunset_start_mins = hm_to_mins(CONFIG_SUNSET_START);
     sunset_end_mins = hm_to_mins(CONFIG_SUNSET_END);
+    temp_data = CREATE_TEMP_CONTROL_DATA();
+
+    disp_values.light_level = 0;
+    disp_values.temp_count = CONFIG_TEMP_COUNT;
+    disp_values.temp_data = malloc(sizeof(temp_disp_t) * CONFIG_TEMP_COUNT);
+
+    for(int i=0; i<CONFIG_TEMP_COUNT; i++) {
+        temp_label_for_idx(i, disp_values.temp_data[i].temp_label);
+    }
 
     ESP_LOGD(TAG, "Sunrise: %d mins - %d mins, Sunset: %d mins - %d mins", sunrise_start_mins, sunrise_end_mins, sunset_start_mins, sunset_end_mins);
 
-    ESP_ERROR_CHECK(light_loading());
+    ESP_ERROR_CHECK_WITHOUT_ABORT(light_loading());
 
     esp_err_t ret = ESP_FAIL;
     while(ret != ESP_OK) {
         ret = blocking_update_time();
         if(ret != ESP_OK) {
             ESP_LOGE(TAG, "failed initial time update");
-            ESP_ERROR_CHECK(light_error());
+            ESP_ERROR_CHECK_WITHOUT_ABORT(light_error());
             vTaskDelay(5000 / portTICK_PERIOD_MS);
         }
     }
@@ -139,7 +168,7 @@ static void scheduler_init() {
 esp_err_t scheduler_start() {
     scheduler_init();
 
-    // xTaskCreate(scheduler_loop_task, "scheduler loop", 4096, NULL, 5, NULL);
+    xTaskCreate(scheduler_loop_task, "scheduler loop", 4096, NULL, 5, NULL);
 
     return ESP_OK;
 }

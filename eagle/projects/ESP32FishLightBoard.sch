@@ -3078,6 +3078,7 @@ wire to board 2.54 mm (.1 inch) pitch header</description>
 <part name="T3V3" library="wirepad" library_urn="urn:adsk.eagle:library:412" deviceset="WIREPAD" device="2,54/1,0" package3d_urn="urn:adsk.eagle:package:30828/1"/>
 <part name="BZR" library="buzzer" library_urn="urn:adsk.eagle:library:113" deviceset="F/QMX" device="" package3d_urn="urn:adsk.eagle:package:5278/1"/>
 <part name="OLED" library="con-molex" library_urn="urn:adsk.eagle:library:165" deviceset="22-?-04" device="27-2041" package3d_urn="urn:adsk.eagle:package:8078649/1"/>
+<part name="R2" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="FLIPFLOP-RES" device="" package3d_urn="urn:adsk.eagle:package:6240726/1" value="4.7k"/>
 </parts>
 <sheets>
 <sheet>
@@ -3137,6 +3138,10 @@ wire to board 2.54 mm (.1 inch) pitch header</description>
 </instance>
 <instance part="OLED" gate="-4" x="96.52" y="96.52" smashed="yes">
 <attribute name="NAME" x="99.06" y="95.758" size="1.524" layer="95"/>
+</instance>
+<instance part="R2" gate="G$1" x="99.06" y="22.86" smashed="yes">
+<attribute name="NAME" x="95.25" y="24.3586" size="1.778" layer="95"/>
+<attribute name="VALUE" x="95.25" y="19.558" size="1.778" layer="96"/>
 </instance>
 </instances>
 <busses>
@@ -3290,6 +3295,11 @@ wire to board 2.54 mm (.1 inch) pitch header</description>
 <wire x1="2.54" y1="96.52" x2="12.7" y2="96.52" width="0.1524" layer="91"/>
 <label x="10.16" y="96.52" size="1.778" layer="95" align="bottom-right"/>
 </segment>
+<segment>
+<pinref part="R2" gate="G$1" pin="1"/>
+<wire x1="93.98" y1="22.86" x2="88.9" y2="22.86" width="0.1524" layer="91"/>
+<label x="88.9" y="22.86" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="3V3" class="0">
 <segment>
@@ -3306,6 +3316,11 @@ wire to board 2.54 mm (.1 inch) pitch header</description>
 <pinref part="OLED" gate="-2" pin="S"/>
 <wire x1="93.98" y1="106.68" x2="86.36" y2="106.68" width="0.1524" layer="91"/>
 <label x="88.9" y="106.68" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="R2" gate="G$1" pin="2"/>
+<wire x1="104.14" y1="22.86" x2="109.22" y2="22.86" width="0.1524" layer="91"/>
+<label x="109.22" y="22.86" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="IO15" class="0">

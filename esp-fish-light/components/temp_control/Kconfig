@@ -6,6 +6,22 @@ menu "Temp Control"
         help
             Number of DS18B20 temp sensors.
 
+    config TEMP_COOL_LIMIT
+        int "Temp Cool Limit (10th Degree C)"
+        default 240
+
+    config TEMP_COLD_LIMIT
+        int "Temp Cold Limit (10th Degree C)"
+        default 220
+
+    config TEMP_WARM_LIMIT
+        int "Temp Warm Limit (10th Degree C)"
+        default 270
+
+    config TEMP_HOT_LIMIT
+        int "Temp Hot Limit (10th Degree C)"
+        default 290
+
     config TEMP_0_NAME
         string "Temp 0 Name"
         default "Temp 0"

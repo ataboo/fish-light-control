@@ -157,6 +157,28 @@ esp_err_t temp_control_init() {
     return ESP_OK;
 }
 
+static temp_warn_t get_temp_warn(float temp) {
+    float tenths = temp * 10;
+    
+    if (tenths <= CONFIG_TEMP_COLD_LIMIT) {
+        return TEMP_COLD;
+    }
+
+    if (tenths <= CONFIG_TEMP_COOL_LIMIT) {
+        return TEMP_COOL;
+    }
+
+    if (tenths < CONFIG_TEMP_WARM_LIMIT) {
+        return TEMP_NOMINAL;
+    }
+
+    if(tenths < CONFIG_TEMP_HOT_LIMIT) {
+        return TEMP_WARM;
+    }
+
+    return TEMP_HOT;
+}
+
 esp_err_t temp_control_update(temp_data_t* data) {
     if (CONFIG_TEMP_COUNT == 0 || !temp_devices[0].owb_device) {
         ESP_LOGE(TAG, "Failed to read temps since first temp device not configured.");
@@ -164,20 +186,19 @@ esp_err_t temp_control_update(temp_data_t* data) {
     }
 
     ds18b20_convert_all(owb);
-
     ds18b20_wait_for_conversion(temp_devices[0].owb_device);
 
     for (int i = 0; i < CONFIG_TEMP_COUNT; ++i)
     {
-        data[i].warn = TEMP_NOMINAL;
-
         if (!temp_devices[i].owb_device) {
             data[i].err = TEMP_READ_ERR_NOT_FOUND;
             data[i].temp = 0;
+            data[i].warn = TEMP_NOMINAL;
             continue;
         }
 
         data[i].err = ds18b20_read_temp(temp_devices[i].owb_device, &data[i].temp);
+        data[i].warn = get_temp_warn(data[i].temp);
     }
 
     return ESP_OK;

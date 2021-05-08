@@ -1,5 +1,3 @@
-
-// #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,15 +9,15 @@
 #include "driver/rmt.h"
 #include "esp_system.h"
 #include "time.h"
+// #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
 
 static const char *TAG = "LIGHT_CONTROL";
 static led_strip_t* led_strip;
-static struct tm timeinfo;
 static color_rgb_t current_color;
 
-#define RMT_TX_CHANNEL RMT_CHANNEL_0
+#define RMT_TX_CHANNEL RMT_CHANNEL_3
 #define RMT_CLOCK_DIV 1
 
 
@@ -65,8 +63,6 @@ esp_err_t light_dim_level(float level) {
     if (!led_strip) {
         return ESP_FAIL;
     }
-    
-    esp_err_t ret = ESP_OK;
     
     if(level > 1 || level < 0) {
         return ESP_ERR_INVALID_ARG;

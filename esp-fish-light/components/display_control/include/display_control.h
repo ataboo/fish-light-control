@@ -5,6 +5,7 @@
 #include "fish_light_common.h"
 
 #define TEMP_LABEL_MAX_STR_LEN 8
+#define ERR_MAX_STR_LEN 16
 
 typedef struct {
     char* temp_label;
@@ -22,3 +23,5 @@ typedef struct {
 esp_err_t display_control_init();
 
 esp_err_t display_control_update(display_values_t* values);
+
+esp_err_t display_control_fatal_error(char* messages, int count);

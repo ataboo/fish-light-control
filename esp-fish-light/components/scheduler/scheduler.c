@@ -26,6 +26,7 @@ static uint16_t sleep_time_mins;
 static struct tm timeinfo;
 static temp_data_t* temp_data;
 static display_values_t disp_values; 
+static bool temp_alert_active = false;
 
 static int hm_to_mins(int hour_mins) {
     return (hour_mins / 100 * 60) + (hour_mins % 100);
@@ -60,13 +61,16 @@ static void update_display(struct tm* time_info) {
         ESP_LOGE(TAG, "failed to update temp values");
     }
 
+    temp_alert_active = false;
     for(int i=0; i<CONFIG_TEMP_COUNT; i++) {
         disp_values.temp_data[i].temp = temp_data[i].temp;
         disp_values.temp_data[i].warning = temp_data[i].warn;
+        if (TEMP_WARN_IS_ALERT(temp_data[i].warn)) {
+            temp_alert_active = true;
+        }
     }
     
     disp_values.time = time_info;
-
     display_control_update(&disp_values);
 }
 
@@ -120,13 +124,15 @@ static void scheduler_loop_task(void* arg) {
             update_internal_clock();
         }
 
-        //TODO if alarm, no sleep.
-
-        sleep_time_mins = mins_until_next_wakeup();
-        ESP_LOGI(TAG, "Sleeping for %d seconds", sleep_time_mins * 60);
-        esp_sleep_enable_timer_wakeup((uint64_t)sleep_time_mins * 60e6);
-        vTaskDelay(50 / portTICK_PERIOD_MS);
-        esp_light_sleep_start();
+        if(temp_alert_active) {
+            vTaskDelay(1000/portTICK_PERIOD_MS);
+        } else {
+            sleep_time_mins = mins_until_next_wakeup();
+            ESP_LOGI(TAG, "Sleeping for %d seconds", sleep_time_mins * 60);
+            esp_sleep_enable_timer_wakeup((uint64_t)sleep_time_mins * 60e6);
+            vTaskDelay(50 / portTICK_PERIOD_MS);
+            esp_light_sleep_start();
+        }
     }
 
     vTaskDelete(NULL);

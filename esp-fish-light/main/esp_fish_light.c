@@ -11,49 +11,63 @@
 #include "freertos/task.h"
 #include "display_control.h"
 #include "temp_control.h"
+#include "buzzer_control.h"
 
 static const char *TAG = "ESP_FISH_LIGHT";
+
+static void indicate_failure(char* messages, int count) {
+    ESP_LOGE(TAG, "Fatal error on startup.  Resetting in 10 seconds.");
+    light_error();
+    display_control_fatal_error(messages, count);
+
+    vTaskDelay(10000/portTICK_PERIOD_MS);
+    esp_restart();
+}
 
 void app_main(void)
 {
     esp_log_level_set("*", ESP_LOG_INFO);
 
-    time_t now;
-    
-    struct tm timeinfo;
+    // wifi_time_init();
 
-    wifi_time_init();
-    ESP_ERROR_CHECK_WITHOUT_ABORT(display_control_init());
-    ESP_ERROR_CHECK_WITHOUT_ABORT(temp_control_init());
+    // esp_err_t light_ret = light_control_init();
+    // esp_err_t display_ret = display_control_init();
+    // esp_err_t temp_ret = temp_control_init();
 
-    // char temp_labels[3][TEMP_LABEL_MAX_STR_LEN] = { "Dathan", "Johnny", "Thanatos" };
-    // float temps[3] = { 25.5f, 28.2f, 30.1f };
-    // temp_warn_t temp_warns[3] = {TEMP_NOMINAL, TEMP_WARM, TEMP_HOT};
-
-    scheduler_start();
-
-    // while(true) {
-    //     time(&now);
-    //     localtime_r(&now, &timeinfo);
-
-    //     display_values_t values = {
-    //         .light_level = 0.5,
-    //         .time = &timeinfo,
-    //         .temp_labels = (char*)temp_labels,
-    //         .temp_count = 3,
-    //         .temp_warns = (temp_warn_t*)temp_warns,
-    //         .temps = temps,
-    //     };
-
-    //     display_control_update(&values);
-
-    //     vTaskDelay(1000/portTICK_RATE_MS);
-
-    //     // ESP_ERROR_CHECK(light_control_init());
-    //     // vTaskDelay(50/portTICK_PERIOD_MS);
-
-
+    // int errCount = 0;
+    // char err_buffer[3][ERR_MAX_STR_LEN];
+    // if(light_ret != ESP_OK) {
+    //     strcpy(err_buffer[errCount++], "Light Control");
     // }
 
-    temp_data_t* data = CREATE_TEMP_CONTROL_DATA();
+    // if (display_ret != ESP_OK) {
+    //     strcpy(err_buffer[errCount++], "Display Control");
+    // }
+
+    // if (temp_ret != ESP_OK) {
+    //     strcpy(err_buffer[errCount++], "Temp Control");
+    // }
+
+    // if (errCount > 0) {
+    //     indicate_failure(err_buffer, errCount);
+    // }
+
+    // scheduler_start();
+
+    buzzer_keyframe_t keyframes[4] = {
+        {440, 100},
+        {0, 100},
+        {880, 100},
+        {0, 1000}
+    };
+
+    buzzer_pattern_t pattern = {
+        .key_frames = keyframes,
+        .frame_count = 4
+    };
+
+    ESP_ERROR_CHECK_WITHOUT_ABORT(buzzer_control_init());
+    // buzzer_control_play_pattern(&pattern);
+
+    vTaskDelay(portMAX_DELAY);
 }

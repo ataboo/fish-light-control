@@ -1,3 +1,3 @@
 idf_component_register(SRCS "esp_fish_light.c"
                     INCLUDE_DIRS "."
-                    REQUIRES wifi_time light_control scheduler display_control temp_control)
+                    REQUIRES wifi_time light_control scheduler display_control temp_control buzzer_control)

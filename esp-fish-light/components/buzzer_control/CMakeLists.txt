@@ -1,3 +1,3 @@
-idf_component_register(SRCS "buzzer_control.c"
+idf_component_register(SRCS "buzzer_control.c" "buzzer_music.c"
                        INCLUDE_DIRS "include"
-                       PRIV_REQUIRES )
+                       PRIV_REQUIRES fish-light-common)

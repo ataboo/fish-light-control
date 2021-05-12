@@ -1,7 +1,12 @@
 #pragma once
 
-#define TEMP_WARN_IS_ALERT(temp_warn) (temp_warn > TEMP_COOL)
-
+#define RETURN_IF_NOT_OK(action, message) ({ \
+    esp_err_t ret = action;                  \
+    if(ret != ESP_OK) {                      \
+        ESP_LOGE(TAG, message);              \
+        return ret;                          \
+    }                                        \
+})
 
 typedef enum {
     TEMP_NOMINAL = 0,

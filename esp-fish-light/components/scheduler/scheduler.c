@@ -9,6 +9,8 @@
 #include "time.h"
 #include "esp_sleep.h"
 #include "temp_control.h"
+#include "buzzer_control.h"
+#include "buzzer_music.h"
 
 #define CLOCK_UPDATE_COOLDOWN_MINS (60) 
 
@@ -27,9 +29,22 @@ static struct tm timeinfo;
 static temp_data_t* temp_data;
 static display_values_t disp_values; 
 static bool temp_alert_active = false;
+static buzzer_pattern_t* warn_pattern;
+static buzzer_pattern_t* alarm_pattern;
+static temp_warn_t current_alarm;
 
 static int hm_to_mins(int hour_mins) {
     return (hour_mins / 100 * 60) + (hour_mins % 100);
+}
+
+static void init_buzzer_patterns() {
+    ESP_ERROR_CHECK_WITHOUT_ABORT(parse_music_str("l1o6f#o3fo6f#o3fo6f#o3fr8r8", &alarm_pattern));
+    alarm_pattern->loop = false;
+    alarm_pattern->waveform = BUZZER_WAV_SAW;
+
+    ESP_ERROR_CHECK_WITHOUT_ABORT(parse_music_str("l1o5gb$r2gb$r8r8r8r8", &warn_pattern));
+    warn_pattern->loop = true;
+    warn_pattern->waveform = BUZZER_WAV_SIN;
 }
 
 static float level_for_time(int mins) {
@@ -55,23 +70,48 @@ static void update_light_for_time() {
     ESP_ERROR_CHECK_WITHOUT_ABORT(light_dim_level(level));
 }
 
-static void update_display(struct tm* time_info) {
+static void update_display(struct tm* time_info) {    
+    disp_values.time = time_info;
+    display_control_update(&disp_values);
+}
+
+static esp_err_t update_temp_data() {
     esp_err_t ret = temp_control_update(temp_data);
     if(ret != ESP_OK) {
         ESP_LOGE(TAG, "failed to update temp values");
     }
 
-    temp_alert_active = false;
+    temp_warn_t lowest_alarm = TEMP_NOMINAL;
     for(int i=0; i<CONFIG_TEMP_COUNT; i++) {
         disp_values.temp_data[i].temp = temp_data[i].temp;
         disp_values.temp_data[i].warning = temp_data[i].warn;
-        if (TEMP_WARN_IS_ALERT(temp_data[i].warn)) {
-            temp_alert_active = true;
+        if (temp_data[i].warn != TEMP_NOMINAL) {
+            lowest_alarm = temp_data[i].warn < lowest_alarm ? temp_data[i].warn : lowest_alarm;
         }
     }
-    
-    disp_values.time = time_info;
-    display_control_update(&disp_values);
+
+    if (lowest_alarm != current_alarm) {
+        switch (lowest_alarm)
+        {
+        case TEMP_NOMINAL:
+            buzzer_control_play_pattern(NULL);
+            break;
+        case TEMP_COOL:
+        case TEMP_WARM:
+            buzzer_control_play_pattern(warn_pattern);
+            break;
+        case TEMP_COLD:
+        case TEMP_HOT:
+            buzzer_control_play_pattern(alarm_pattern);
+            break;
+        default:
+            return ESP_ERR_NOT_SUPPORTED;
+        }
+
+        current_alarm = lowest_alarm;
+    }
+
+    return ESP_OK;
 }
 
 static uint16_t mins_until_next_wakeup() {
@@ -117,7 +157,8 @@ static void scheduler_loop_task(void* arg) {
         localtime_r(&now, &timeinfo);
         ESP_LOGI(TAG, "Updating for time: %.2d:%.2d", timeinfo.tm_hour, timeinfo.tm_min);
         update_light_for_time(now);
-        
+        update_temp_data();
+
         update_display(&timeinfo);
         
         if (esp_timer_get_time() - last_update_micros > clock_update_cooldown_micros) {

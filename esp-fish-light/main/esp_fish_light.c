@@ -12,6 +12,7 @@
 #include "display_control.h"
 #include "temp_control.h"
 #include "buzzer_control.h"
+#include "buzzer_music.h"
 
 static const char *TAG = "ESP_FISH_LIGHT";
 
@@ -28,46 +29,34 @@ void app_main(void)
 {
     esp_log_level_set("*", ESP_LOG_INFO);
 
-    // wifi_time_init();
+    wifi_time_init();
 
-    // esp_err_t light_ret = light_control_init();
-    // esp_err_t display_ret = display_control_init();
-    // esp_err_t temp_ret = temp_control_init();
+    esp_err_t light_ret = light_control_init();
+    esp_err_t display_ret = display_control_init();
+    esp_err_t temp_ret = temp_control_init();
+    esp_err_t buzzer_ret = buzzer_control_init();
 
-    // int errCount = 0;
-    // char err_buffer[3][ERR_MAX_STR_LEN];
-    // if(light_ret != ESP_OK) {
-    //     strcpy(err_buffer[errCount++], "Light Control");
-    // }
+    int errCount = 0;
+    char err_buffer[3][ERR_MAX_STR_LEN];
+    if(light_ret != ESP_OK) {
+        strcpy(err_buffer[errCount++], "Light Control");
+    }
 
-    // if (display_ret != ESP_OK) {
-    //     strcpy(err_buffer[errCount++], "Display Control");
-    // }
+    if (display_ret != ESP_OK) {
+        strcpy(err_buffer[errCount++], "Display Control");
+    }
 
-    // if (temp_ret != ESP_OK) {
-    //     strcpy(err_buffer[errCount++], "Temp Control");
-    // }
+    if (temp_ret != ESP_OK) {
+        strcpy(err_buffer[errCount++], "Temp Control");
+    }
 
-    // if (errCount > 0) {
-    //     indicate_failure(err_buffer, errCount);
-    // }
+    if (buzzer_ret != ESP_OK) {
+        strcpy(err_buffer[errCount++], "Buzzer Control");
+    }
 
-    // scheduler_start();
+    if (errCount > 0) {
+        indicate_failure((char*)err_buffer, errCount);
+    }
 
-    buzzer_keyframe_t keyframes[4] = {
-        {440, 100},
-        {0, 100},
-        {880, 100},
-        {0, 1000}
-    };
-
-    buzzer_pattern_t pattern = {
-        .key_frames = keyframes,
-        .frame_count = 4
-    };
-
-    ESP_ERROR_CHECK_WITHOUT_ABORT(buzzer_control_init());
-    // buzzer_control_play_pattern(&pattern);
-
-    vTaskDelay(portMAX_DELAY);
+    scheduler_start();
 }
